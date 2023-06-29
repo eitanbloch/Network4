@@ -100,7 +100,7 @@ vector<Client> client_list;
 // initialize connections
 void init() {
     // init socket
-    socket(AF_INET, SOCK_STREAM, 0);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
     // create a socket and bind it to port 80
     addr.sin_family = AF_INET;
     addr.sin_port = htons(80);
@@ -109,6 +109,7 @@ void init() {
         cerr << "Problem binding socket to port 80" << endl;
         exit(0);
     }
+    listen(sock, 5);
 
     //setup connection with servers
     server_list.emplace_back(Server(0));
