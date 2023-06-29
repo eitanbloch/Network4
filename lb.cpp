@@ -254,7 +254,7 @@ void handle_server(int server_id) {
     auto& server = server_list[server_id];
     if (server.is_busy || task_list.empty())
         return;
-
+    /*
     Task *best_task = nullptr;
     int min_score = 1000000;
     for (auto &task: task_list){
@@ -265,9 +265,9 @@ void handle_server(int server_id) {
         }
     }
     send_task_to_server(server, *best_task);
+    */
 
-
-/*    // start with sjf
+   // start with sjf
     Task *best_task = nullptr;
     for (auto& task: task_list) {
         if (are_matching(server.is_music, task.type)) {
@@ -302,7 +302,7 @@ void handle_server(int server_id) {
     }
 
     send_task_to_server(server, *best_task);
-    */
+
 }
 
 void balance_load() {
