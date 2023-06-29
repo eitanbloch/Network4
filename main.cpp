@@ -132,7 +132,7 @@ void send_task_to_server(Server& server, Task& task) {
     server.task = task;
     server.is_busy = true;
     char buff[] = "M0"; // ! change back later
-    send(server.fd, buff, task.data.length(), 0);
+    send(server.fd, buff, 2, 0);
     // remove task from task list
     for (int i = 0; i < task_list.size(); i++) {
         if (task_list[i].client_id == task.client_id) {
