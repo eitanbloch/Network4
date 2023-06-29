@@ -234,7 +234,7 @@ void handle_server(int server_id) {
     Task *best_task = nullptr;
     for (auto& task: task_list) {
         if (are_matching(server.is_music, task.type)) {
-            if (best_task == nullptr || task.time > best_task->time) {
+            if (best_task == nullptr || task.time < best_task->time) {
                 best_task = &task;
             }
         }
@@ -248,7 +248,7 @@ void handle_server(int server_id) {
         // if no task found choose task with minimal waste
         int min_waste = 1000000;
         for (auto& task: task_list) {
-                int waste = task.time * (task.type == PICTURE ? 1 : 2);
+                int waste = task.time * (task.type == PICTURE ? 2 : 3);
                 if (waste < min_waste) {
                     min_waste = waste;
                     best_task = &task;
