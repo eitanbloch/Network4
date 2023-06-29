@@ -209,7 +209,7 @@ int get_tasks(){
             }
             // read request
             char buffer[3] = {0};
-            int valread = (int) read(client_socket, buffer, 3);
+            int valread = (int) recv(client_socket, buffer, 3, 0);
             if (valread < 0) {
                 return -1;
             }
@@ -250,7 +250,7 @@ bool server_is_free(Server &server){
     select(server.fd + 1, &readfds, nullptr, nullptr, &timeout);
     if (FD_ISSET(server.fd, &readfds)){
         char buffer[3] = {0};
-        int valread = (int) read(server.fd, buffer, 3);
+        int valread = (int) recv(server.fd, buffer, 3, 0);
         if (valread < 0) {
             cout << "Error reading from server " << server.id << endl;
             return false;
