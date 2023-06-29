@@ -40,7 +40,39 @@ typedef struct request {
 	char original_request[2];
 
 } request;
+
+
+struct Task {
+    int client_id;
+    TYPE type;
+    int time;
+    string data;
+
+    Task() {
+        client_id = -1;
+    }
+
+    Task(char buffer[], int client_id) {
+        this->client_id = client_id;
+        if (buffer[0] == 'M') {
+            type = MUSIC;
+        }
+        else if (buffer[0] == 'P') {
+            type = PICTURE;
+        }
+        else {
+            type = VIDEO;
+        }
+        time = atoi(buffer + 1);
+        data = string(buffer, 3);
+    }
+};
+
 int servers_sockets[3] = {0};
+
+vector<Task> task_list;
+vector<Server> server_list;
+vector<Client> client_list;
 
 typedef struct sockaddr_in Addr;
 const char *SERVER_IP[] = {"192.168.0.101", "192.168.0.102", "192.168.0.103"};
@@ -95,17 +127,11 @@ int main() {
     init();
 
 
-
-
-	//now we need to accept the clients
-
 	struct sockaddr_in client;
 
 	int client_size = sizeof(client);
 
 	char buffer[2];
-
-
 
 	//queue of requests
 
@@ -134,37 +160,6 @@ int main() {
 	while (true)
 
 	{
-
-		//counter++;
-
-		/*//accept new client connection
-
-		auto client_socket = accept(load_balancer_socket, (struct sockaddr*)&client, (socklen_t*)&client_size);
-
-		if (client_socket < 0) {
-
-			//printf("Error accepting client\n");
-
-			return -1;
-
-		}
-
-		//now we need to read the request
-
-		if (read(client_socket, buffer, 2) < 0) {
-
-			//printf("Error reading from client\n");
-
-			return -1;
-
-		}
-
-		//now we need to handle the request
-
-		//we will use the first digit to determine the request type
-
-		//and the second digit to determine the time it would take*/
-
 
 
 		//non blocking version:
