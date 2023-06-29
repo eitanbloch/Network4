@@ -41,7 +41,7 @@ typedef struct request {
 
 } request;
 
-
+/*
 struct Task {
     int client_id;
     TYPE type;
@@ -67,10 +67,10 @@ struct Task {
         data = string(buffer, 3);
     }
 };
-
+*/
 int servers_sockets[3] = {0};
 
-vector<Task> task_list;
+//vector<Task> task_list;
 vector<Server> server_list;
 vector<Client> client_list;
 
