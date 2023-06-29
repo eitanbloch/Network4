@@ -205,12 +205,14 @@ int get_tasks(){
             struct sockaddr_in client_addr;
             int client_socket = accept(sock, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr);
             if (client_socket < 0) {
+                cout << "Problem accepting client request" << endl;
                 return -1;
             }
             // read request
             char buffer[3] = {0};
             int valread = (int) recv(client_socket, buffer, 3, 0);
             if (valread < 0) {
+                cout << "Problem reading from client" << endl;
                 return -1;
             }
             // create task:
@@ -221,7 +223,6 @@ int get_tasks(){
             Client &client = client_list[task.client_id];
             client.task = &task;
             client.fd = client_socket;
-            // ! might need to add addr to client
 
             cout << "Task: " << task.data << " received from client " << task.client_id << endl;
             counter++;
@@ -250,7 +251,7 @@ bool server_is_free(Server &server){
     select(server.fd + 1, &readfds, nullptr, nullptr, &timeout);
     if (FD_ISSET(server.fd, &readfds)){
         char buffer[3] = {0};
-        int valread = (int) recv(server.fd, buffer, 3, 0);
+        int valread = (int) recv(server.fd, buffer, 3, MSG_DONTWAIT);
         if (valread < 0) {
             cout << "Error reading from server " << server.id << endl;
             return false;
