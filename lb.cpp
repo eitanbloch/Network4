@@ -1,234 +1,101 @@
-//Tikshoret hw4
-
-
-//this code is for the load balancing of the clients to the server
-
-
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <unistd.h>
-
 #include <sys/types.h>
-
-//socket stuff
-
 #include <sys/socket.h>
-
 #include <netinet/in.h>
-
 #include <arpa/inet.h>
-
-
-//include the queue
-
 #include <queue>
-
-//now list
-
 #include <list>
+#include <string>
+#include <iostream>
+#include <vector>
+
+using std::cin;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::queue;
+using std::string;
+using std::vector;
 
 
-//define structs for our use
-
-
-//struct for the server
-
-typedef struct server {
-
-	char* ip;
-
+struct Server {
+    char* ip;
 	int port;
-
 	int load;
+};
 
-} server;
-
-
-//struct for the client
-
-typedef struct client {
-
+struct Client {
 	char* ip;
-
-	int port;
-
-} client;
-
-
-/*//enum for requests types
-
-typedef enum request_type {
-
-	Music,
-
-	Video,
-
-	Photo
-
-} request_type;*/
-
-
-
-//struct for the request - type and one digit int of how much time it would take
+    int port;
+} ;
 
 typedef struct request {
-
 	int video_server_price;
-
 	int music_server_price;
-
-	//client socket
-
+    //client socket
 	int client_socket;
-
 	char original_request[2];
 
 } request;
+int servers_sockets[3] = {0};
+
+typedef struct sockaddr_in Addr;
+const char *SERVER_IP[] = {"192.168.0.101", "192.168.0.102", "192.168.0.103"};
+int sock;
+Addr addr;
 
 
-//we are the load balancer so there is no need for a struct for it
+void start_server(int server_id, int socket){
+    Addr s_addr;
+    s_addr.sin_family = AF_INET;
+    s_addr.sin_port = htons(80);
+    s_addr.sin_addr.s_addr = inet_addr(SERVER_IP[server_id]);
+    if (connect(socket, (struct sockaddr*)&s_addr, sizeof(s_addr)) < 0) {
+        cout << "There is a problem with the connection to server " << server_id << endl;
+        exit(-1);
 
+    }
+    servers_sockets[server_id] = socket;
 
-//return the server index we need to send to
+}
 
-int handle_request(request req, int* servers_load)
+int init(){
+    // init servers
+    int s1_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int s2_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int s3_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-{
+    start_server(0, s1_socket);
+    start_server(1, s2_socket);
+    start_server(2, s3_socket);
+    // init main socket
+    sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	return 1;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(80);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        cout << "Error binding client socket" << endl;
+        exit(-1);
+    }
+    if (listen(sock, 5) < 0) {
+        cout << "Error listening to client socket" << endl;
+        exit(-1);
+    }
 
 }
 
 
+int main() {
 
+    init();
 
-//the main loop that recieve connections from client and handle them
 
-//returns 0 on success and -1 on failure
 
-int main(int argc, char* argv[]) {
-
-
-	//connect to servers: 192.168.0.101-192.168.0.103
-
-	//port:80
-
-	int video_server_1_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-	int video_server_2_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-	int music_server_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-	//now connect to the servers
-
-	//connect to video server 1
-
-	struct sockaddr_in video_server_1;
-
-	video_server_1.sin_family = AF_INET; //this line means we are using ipv4
-
-	video_server_1.sin_port = htons(80); //this line means we are using port 80
-
-	video_server_1.sin_addr.s_addr = inet_addr("192.168.0.101"); //this line means we are using the ip
-
-	//connect to video server 2
-
-	struct sockaddr_in video_server_2;
-
-	video_server_2.sin_family = AF_INET; //this line means we are using ipv4
-
-	video_server_2.sin_port = htons(80); //this line means we are using port 80
-
-	video_server_2.sin_addr.s_addr = inet_addr("192.168.0.102"); //this line means we are using the ip
-
-	//connect to music server
-
-	struct sockaddr_in music_server;
-
-	music_server.sin_family = AF_INET; //this line means we are using ipv4
-
-	music_server.sin_port = htons(80); //this line means we are using port 80
-
-	music_server.sin_addr.s_addr = inet_addr("192.168.0.103"); //this line means we are using the ip
-
-	//now connect to the servers
-
-	//connect to video server 1
-
-	if (connect(video_server_1_socket, (struct sockaddr*)&video_server_1, sizeof(video_server_1)) < 0) {
-
-		//printf("Error connecting to video server 1\n");
-
-		return -1;
-
-	}
-
-	//connect to video server 2
-
-	if (connect(video_server_2_socket, (struct sockaddr*)&video_server_2, sizeof(video_server_2)) < 0) {
-
-		//printf("Error connecting to video server 2\n");
-
-		return -1;
-
-	}
-
-	//connect to music server
-
-	if (connect(music_server_socket, (struct sockaddr*)&music_server, sizeof(music_server)) < 0) {
-
-		//printf("Error connecting to music server\n");
-
-		return -1;
-
-	}
-
-
-	//put them in an array
-
-	int servers_sockets[3] = { video_server_1_socket,video_server_2_socket,music_server_socket };
-
-	//printf("now we have the servers list\n");
-
-	//we use one port so there can only be one port!
-
-	//we will use port 80
-
-	int load_balancer_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-	struct sockaddr_in load_balancer;
-
-	load_balancer.sin_family = AF_INET; //this line means we are using ipv4
-
-	load_balancer.sin_port = htons(80); //this line means we are using port 80
-
-	load_balancer.sin_addr.s_addr = htonl(INADDR_ANY); //this line means we are using the ip
-
-	//now we need to bind the socket to the ip and port
-
-	if (bind(load_balancer_socket, (struct sockaddr*)&load_balancer, sizeof(load_balancer)) < 0) {
-
-		//printf("Error binding socket\n");
-
-		return -1;
-
-	}
-
-	//now we need to listen to the clients
-
-	if (listen(load_balancer_socket, 5) < 0) {
-
-		//printf("Error listening to clients\n");
-
-		return -1;
-
-	}
-
-	
 
 	//now we need to accept the clients
 
@@ -238,7 +105,7 @@ int main(int argc, char* argv[]) {
 
 	char buffer[2];
 
-	
+
 
 	//queue of requests
 
@@ -270,7 +137,7 @@ int main(int argc, char* argv[]) {
 
 		//counter++;
 
-		/*//accept new client connection 
+		/*//accept new client connection
 
 		auto client_socket = accept(load_balancer_socket, (struct sockaddr*)&client, (socklen_t*)&client_size);
 
@@ -298,7 +165,7 @@ int main(int argc, char* argv[]) {
 
 		//and the second digit to determine the time it would take*/
 
-		
+
 
 		//non blocking version:
 
@@ -308,7 +175,7 @@ int main(int argc, char* argv[]) {
 
 		FD_ZERO(&readfds);
 
-		FD_SET(load_balancer_socket, &readfds);
+		FD_SET(sock, &readfds);
 
 		struct timeval timeout;
 
@@ -316,7 +183,7 @@ int main(int argc, char* argv[]) {
 
 		timeout.tv_usec = 0;
 
-		int select_result = select(load_balancer_socket + 1, &readfds, NULL, NULL, &timeout);
+		int select_result = select(sock + 1, &readfds, NULL, NULL, &timeout);
 
 		//if (select_result < 0) {
 
@@ -330,7 +197,7 @@ int main(int argc, char* argv[]) {
 
 		bool new_connection = false;
 
-		if (FD_ISSET(load_balancer_socket, &readfds)) {
+		if (FD_ISSET(sock, &readfds)) {
 
 			new_connection = true;
 
@@ -342,9 +209,9 @@ int main(int argc, char* argv[]) {
 
 			//printf("new client connection\n");
 
-			//accept new client connection 
+			//accept new client connection
 
-			int client_socket = accept(load_balancer_socket, (struct sockaddr*)&client, (socklen_t*)&client_size);
+			int client_socket = accept(sock, (struct sockaddr*)&client, (socklen_t*)&client_size);
 
 			//if (client_socket < 0) {
 
@@ -418,13 +285,13 @@ int main(int argc, char* argv[]) {
 
 
 
-		
 
 
 
 
 
-		
+
+
 
 		//now the part where we check the status of the servers, and retrieve their messeges to the clients
 
@@ -448,7 +315,7 @@ int main(int argc, char* argv[]) {
 
 			struct timeval timeout;
 
-			timeout.tv_sec = 0;	
+			timeout.tv_sec = 0;
 
 			timeout.tv_usec = 0;
 
@@ -506,7 +373,7 @@ int main(int argc, char* argv[]) {
 
 				server_queues[i].pop();
 
-				
+
 
 				//now we need to send the message to the client
 
@@ -534,7 +401,7 @@ int main(int argc, char* argv[]) {
 
 				}
 
-				//free the 
+				//free the
 
 				//now we need to update the server load
 
@@ -546,7 +413,7 @@ int main(int argc, char* argv[]) {
 
 			}
 
-			
+
 
 		}
 
@@ -660,11 +527,11 @@ int main(int argc, char* argv[]) {
 
 								{
 
-									
+
 
 									req_time = current_req.music_server_price;
 
-									
+
 
 								}
 
@@ -819,7 +686,7 @@ int main(int argc, char* argv[]) {
 
 
 
-		
+
 
 	}
 
