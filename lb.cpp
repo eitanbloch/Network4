@@ -78,7 +78,7 @@ struct Server {
         this->id = id;
         this->socket = socket;
         this->addr = addr;
-        is_music = id == 0;
+        is_music = id == 2;
         is_busy = false;
     }
 };
@@ -265,7 +265,7 @@ void handle_server(int server_id) {
         }
     }
     send_task_to_server(server, *best_task);
-    
+
 
 /*    // start with sjf
     Task *best_task = nullptr;
@@ -310,14 +310,14 @@ void balance_load() {
         return;
 
     if (task_list[0].type == MUSIC) {
-        handle_server(0);
-        handle_server(1);
         handle_server(2);
+        handle_server(1);
+        handle_server(0);
     }
     else {
-        handle_server(2);
-        handle_server(1);
         handle_server(0);
+        handle_server(1);
+        handle_server(2);
     }
 }
 
