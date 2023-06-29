@@ -131,8 +131,9 @@ bool are_matching(Task *task, Server *server) {
 void send_task_to_server(Server& server, Task& task) {
     server.task = task;
     server.is_busy = true;
-    char buff[] = "M0"; // ! change back later
-    send(server.fd, buff, 2, 0);
+    char buff[] = "M1"; // ! change back later
+    int res = send(server.fd, buff, 2, 0);
+    cout << "Sent task to server, got response: " << res << endl;
     // remove task from task list
     for (int i = 0; i < task_list.size(); i++) {
         if (task_list[i].client_id == task.client_id) {
@@ -233,7 +234,7 @@ int get_tasks(){
 
 void send_to_client(Task &task, char *buff){
     Client &client = client_list[task.client_id];
-    send(client.fd, buff, 3, 0);
+    send(client.fd, buff, 2, 0);
     close(client.fd);
     cout << "Task: " << task.data << " sent to client " << client.id << endl;
     client.fd = -1;
@@ -251,11 +252,12 @@ bool server_is_free(Server &server){
     select(server.fd + 1, &readfds, nullptr, nullptr, &timeout);
     if (FD_ISSET(server.fd, &readfds)){
         char buffer[3] = {0};
-        int valread = (int) recv(server.fd, buffer, 3, MSG_DONTWAIT);
+        int valread = (int) recv(server.fd, buffer, 2, MSG_DONTWAIT);
         if (valread < 0) {
             cout << "Error reading from server " << server.id << endl;
             return false;
         }
+        cout << "read from server: " << buffer << endl;
         cout << "Task: " << server.task.data << " finished by server " << server.id << endl;
         // send to client
         send_to_client(server.task, buffer);
