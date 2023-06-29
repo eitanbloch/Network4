@@ -53,6 +53,7 @@ struct Task {
             type = VIDEO;
         }
         time = atoi(buffer + 1);
+        data = string(buffer, 3);
     }
 };
 
