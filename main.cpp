@@ -279,8 +279,8 @@ void load_balancer() {
             // ? maybe more efficient to check all servers first
         }
         task_received = get_tasks();
-        if (task_received == 0 && free_server_count == server_list.size() && task_list.empty())
-            break;
+        //if (task_received == 0 && free_server_count == server_list.size() && task_list.empty())
+        //    break;
     }
 }
 
@@ -289,6 +289,7 @@ int main() {
     init();
     cout << "The load balancer is up and running." << endl;
     load_balancer();
+    cout << "The load balancer has terminated gracefully" << endl;
 
     return 0;
 }
