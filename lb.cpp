@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-
+#include <cmath>
 using std::cin;
 using std::cout;
 using std::cerr;
@@ -33,18 +33,23 @@ enum TYPE {
     PICTURE = 1,
     VIDEO = 2,
 };
+int client_completed[] = {0, 0, 0, 0, 0};
+int sum_completed = 0;
 
 struct Task {
+    int client_id;
     int client_socket;
     TYPE type;
     int time;
     char data[2];
 
     Task() {
+        client_id = -1;
         client_socket = -1;
     }
 
-    Task(int client_socket, char buffer[]) {
+    Task(int client_id, int client_socket, char buffer[]) {
+        this->client_id = client_id;
         this->client_socket = client_socket;
         if (buffer[0] == 'M') {
             type = MUSIC;
@@ -79,10 +84,14 @@ struct Server {
 };
 
 
-
 vector<Task> task_list;
 vector<Server> server_list;
 
+
+int get_client_id(Addr client_address){
+    string client_ip = inet_ntoa(client_address.sin_addr);
+    return client_ip[client_ip.length() - 1] - '1';
+}
 
 void start_server(int server_id, int socket) {
     Addr s_addr;
@@ -157,7 +166,7 @@ void get_tasks_from_clients() {
             cout << "Received request from client " << buffer[0] << buffer[1] << endl;
 
             //handle request
-            task_list.emplace_back(client_socket, buffer);
+            task_list.emplace_back(get_client_id(client), client_socket, buffer);
 
         }
     }
@@ -194,7 +203,11 @@ void poll_servers() {
                 cout << "Error closing client socket" << endl;
                 exit(-1);
             }
+            // update logs
+            client_completed[server.task.client_id]++;
+            sum_completed++;
 
+            // update server
             server.task = Task(); // ? might not be needed
             server.is_busy = false;
         }
@@ -205,7 +218,6 @@ void poll_servers() {
 bool are_matching(bool is_music, TYPE type) {
     return is_music == (type == MUSIC);
 }
-
 
 
 void send_task_to_server(Server& server, Task task) {
@@ -225,12 +237,37 @@ void send_task_to_server(Server& server, Task task) {
     }
 }
 
+int get_score(Server& server, Task *task) {
+    bool are_same = are_matching(server.is_music, task->type);
+    int score = task->time;
+    if (!are_same) {
+        score *= (task->type == VIDEO ? 2 : 1); // if video server, then type is music
+        score += 100;
+    }
+
+    double dist = client_completed[task->client_id] - (sum_completed / 5.0);
+    score += (int) pow(3.0, dist);
+    return score;
+}
+
 void handle_server(int server_id) {
     auto& server = server_list[server_id];
     if (server.is_busy || task_list.empty())
         return;
 
-    // start with sjf
+    Task *best_task = nullptr;
+    int min_score = 1000000;
+    for (auto &task: task_list){
+        int score = get_score(server, &task);
+        if (best_task == nullptr || score < min_score) {
+            best_task = &task;
+            min_score = score;
+        }
+    }
+    send_task_to_server(server, *best_task);
+    
+
+/*    // start with sjf
     Task *best_task = nullptr;
     for (auto& task: task_list) {
         if (are_matching(server.is_music, task.type)) {
@@ -239,22 +276,23 @@ void handle_server(int server_id) {
             }
         }
     }
+
     if (best_task) {
         send_task_to_server(server, *best_task);
         return;
     }
 
-    if (server.is_music){
+    if (server.is_music) {
         // if no task found choose task with minimal waste
         int min_waste = 1000000;
         for (auto& task: task_list) {
-                int waste = task.time * (task.type == PICTURE ? 2 : 3);
-                if (waste < min_waste) {
-                    min_waste = waste;
-                    best_task = &task;
-                }
+            int waste = task.time * (task.type == PICTURE ? 1 : 2);
+            if (waste < min_waste) {
+                min_waste = waste;
+                best_task = &task;
             }
         }
+    }
     else {
         for (auto& task: task_list) {
             if (best_task == nullptr || task.time < best_task->time) {
@@ -262,7 +300,9 @@ void handle_server(int server_id) {
             }
         }
     }
+
     send_task_to_server(server, *best_task);
+    */
 }
 
 void balance_load() {
