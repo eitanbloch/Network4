@@ -99,6 +99,17 @@ vector<Client> client_list;
 
 // initialize connections
 void init() {
+    // init socket
+    socket(AF_INET, SOCK_STREAM, 0);
+    // create a socket and bind it to port 80
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(80);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(sock, (sockaddr *) &addr, sizeof(addr)) < 0) {
+        cerr << "Problem binding socket to port 80" << endl;
+        exit(0);
+    }
+
     //setup connection with servers
     server_list.emplace_back(Server(0));
     server_list.emplace_back(Server(1));
@@ -109,17 +120,6 @@ void init() {
     client_list.emplace_back(Client(2));
     client_list.emplace_back(Client(3));
     client_list.emplace_back(Client(4));
-
-    // init socket
-    socket(AF_INET, SOCK_STREAM, 0);
-    // create a socket and bind it to port 80
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(80);
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-        cerr << "Problem binding socket to port 80" << endl;
-        exit(0);
-    }
 }
 
 bool are_matching(Task *task, Server *server) {
