@@ -281,7 +281,9 @@ void load_balancer() {
 }
 
 int main() {
+    cout << "Starting the load balancer..." << endl;
     init();
+    cout << "The load balancer is up and running." << endl;
     load_balancer();
 
     return 0;
