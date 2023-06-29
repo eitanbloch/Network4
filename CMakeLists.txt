@@ -4,3 +4,4 @@ project(Network4)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(Network4 main.cpp)
+add_executable(Network4_1 lb.cpp)
