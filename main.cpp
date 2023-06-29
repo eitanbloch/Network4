@@ -204,7 +204,8 @@ int get_tasks(){
         if (connection) {
             //accept connection from an incoming client
             struct sockaddr_in client_addr;
-            int client_socket = accept(sock, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr);
+            int size = sizeof(client_addr);
+            int client_socket = accept(sock, (sockaddr *) &client_addr, (socklen_t *) &size);
             if (client_socket < 0) {
                 cout << "Problem accepting client request" << endl;
                 return -1;
@@ -218,7 +219,7 @@ int get_tasks(){
             }
             // create task:
             string client_ip = inet_ntoa(client_addr.sin_addr);
-            Task task = Task(buffer, client_ip[client_ip.length() - 1] - '0');
+            Task task = Task(buffer, client_ip[client_ip.length() - 1] - '1');
             task_list.push_back(task);
             // connect task to client
             Client &client = client_list[task.client_id];
