@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <queue>
-#include <list>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -80,19 +78,7 @@ struct Server {
     }
 };
 
-/*
-typedef struct request {
-    int video_server_price;
-    int music_server_price;
-    //client socket
-    int client_socket;
-    char original_request[2];
 
-} request;
-
-
-int servers_sockets[3] = {0};
-*/
 
 vector<Task> task_list;
 vector<Server> server_list;
@@ -142,24 +128,6 @@ void init() {
 
 }
 
-
-/*
-std::list<request> requests;
-
-std::queue<int> video_server_1_queue;
-
-std::queue<int> video_server_2_queue;
-
-std::queue<int> music_server_queue;
-
-bool working[3] = {false, false, false};
-
-char types[4] = "VVM";
-
-std::queue<int> server_queues[3] = {video_server_1_queue, video_server_2_queue, music_server_queue};
-
-int initial_workloads[3] = {0, 0, 0};
-*/
 
 void get_tasks_from_clients() {
     bool new_connection = true;
@@ -233,153 +201,6 @@ void poll_servers() {
     }
 }
 
-/*
-void balance_load_tomer() {
-    requests.begin();
-
-    if (!requests.empty()) {
-        int len = requests.size();
-
-        for (int i = 0; i < 3; i++) {
-            if (requests.empty()) {
-                break;
-            }
-
-            if (!working[i]) {
-
-                int maximum_fitting_time = -1;
-                int minimum_bad_time = 1000000;
-                int chosen_indx = 100;
-                bool found_good = false;
-                request chosen_request;
-                int chosen_reqiest_workload = 0;
-                std::list<request>::iterator it = requests.begin();
-
-                for (int req = 0; req < len; req++) {
-
-
-                    request current_req = requests.front();
-                    char req_type = current_req.original_request[0];
-                    int req_time = current_req.original_request[1] - '0';
-
-                    if (req_type == types[i]) {
-
-                        if (req_time > maximum_fitting_time) {
-                            maximum_fitting_time = req_time;
-                            chosen_indx = req;
-                            chosen_request = current_req;
-                            found_good = true;
-                            chosen_reqiest_workload = req_time;
-
-                        }
-
-                    }
-
-                    else {
-
-                        if (!found_good) {
-
-                            //printf("no good\n");
-
-                            if (types[i] == 'V') {
-
-                                req_time = current_req.video_server_price;
-
-                            }
-
-                            else {
-
-
-                                req_time = current_req.music_server_price;
-
-
-                            }
-
-                            int real_finish_time = req_time + initial_workloads[i];
-
-                            if (real_finish_time < minimum_bad_time) {
-
-                                minimum_bad_time = req_time;
-
-                                chosen_indx = req;
-
-                                //print the chosen index
-
-                                //printf("chosen index: %d\n", chosen_indx);
-
-                                chosen_request = current_req;
-
-                                chosen_reqiest_workload = req_time;
-
-                            }
-
-                        }
-
-                    }
-
-                    std::advance(it, 1);
-
-                }
-
-                if (i == 2 && !found_good) {
-
-                    int req_time_on_0 = initial_workloads[0] + chosen_request.video_server_price;
-
-                    int req_time_on_1 = initial_workloads[1] + chosen_request.video_server_price;
-
-                    if (chosen_reqiest_workload > req_time_on_0 || chosen_reqiest_workload > req_time_on_1) {
-
-                        continue;
-
-                    }
-
-                }
-
-                else if (!found_good) {
-
-                    int req_time_on_2 = initial_workloads[2] + chosen_request.music_server_price;
-
-                    if (chosen_reqiest_workload > req_time_on_2 && chosen_request.original_request[0] == 'M') {
-
-                        continue;
-
-                    }
-
-                }
-                // ! ------------------------------
-                // ! important part
-                //now send to the relevant server the request from the chosen index
-
-                if (send(servers_sockets[i], chosen_request.original_request, sizeof(chosen_request.original_request),
-                         MSG_DONTWAIT) < 0) {
-                    cout << "Error sending request to server" << endl;
-                    exit(-1);
-
-                }
-                // ! end of important part
-                // ! ------------------------------
-
-                server_queues[i].push(chosen_request.client_socket);
-
-                it = requests.begin();
-                if (chosen_indx > 0) {
-                    std::advance(it, chosen_indx);
-                }
-                initial_workloads[i] = chosen_reqiest_workload;
-
-                requests.erase(it);
-
-                working[i] = true;
-
-            }
-
-        }
-
-    }
-}
-*/
-
-
 
 bool are_matching(bool is_music, TYPE type) {
     return is_music == (type == MUSIC);
@@ -413,7 +234,7 @@ void handle_server(int server_id) {
     Task *best_task = nullptr;
     for (auto& task: task_list) {
         if (are_matching(server.is_music, task.type)) {
-            if (best_task == nullptr || task.time < best_task->time) {
+            if (best_task == nullptr || task.time > best_task->time) {
                 best_task = &task;
             }
         }
