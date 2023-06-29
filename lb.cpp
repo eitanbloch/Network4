@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <chrono>
+#include <thread>
 using std::cin;
 using std::cout;
 using std::cerr;
@@ -17,7 +19,8 @@ using std::endl;
 using std::queue;
 using std::string;
 using std::vector;
-
+using std::this_thread::sleep_for;
+using std::chrono::milliseconds;
 
 typedef struct sockaddr_in Addr;
 const char *SERVER_IP[] = {"192.168.0.101", "192.168.0.102", "192.168.0.103"};
@@ -325,9 +328,11 @@ int main() {
     init();
 
     while (true) {
+        sleep_for(milliseconds(5));
         get_tasks_from_clients();
         poll_servers();
         balance_load();
+
 
 
     }
