@@ -208,7 +208,7 @@ void poll_servers() {
             int client_socket = server.task.client_socket;
 
             //send the message to the client
-            if (send(client_socket, buffer, 2, MSG_DONTWAIT) < 0) {
+            if (send(client_socket, buffer, 2, 0) < 0) {
                 cout << "Error sending response to client, buffer:" << buffer << " client socket: " << client_socket << endl;
                 exit(-1);
             }
