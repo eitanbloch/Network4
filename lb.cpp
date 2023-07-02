@@ -347,7 +347,7 @@ bool should_send_to_server(Server& s, Task *task) {
     min_time_with = min(min(o1, o2), o3);
 
     cout << "min time with: " << min_time_with << " min time without: " << min_time_without << endl;
-    return min_time_with <= min_time_without + 1;
+    return min_time_with <= min_time_without;
 }
 
 
