@@ -12,6 +12,7 @@
 #include <cmath>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 
 using std::cin;
 using std::cout;
@@ -277,6 +278,8 @@ int get_calc_time(Server& server, Task *task) {
 
 
 bool should_send_to_server(Server& server, Task *task) {
+    cout << "should send to server, Got server id: " << server.id << " Task : " << task->data << endl;
+    cout << "Task list size: " << task_list.size() << endl;
     if (task_list.size() >= 3)
         return true;
     int min_time;
@@ -297,7 +300,7 @@ bool should_send_to_server(Server& server, Task *task) {
             min_time = int(s1.is_busy ? s1.task.time - std::chrono::duration_cast<std::chrono::seconds>(
                     system_clock::now() - s1.task.start_time).count() : 0);
         }
-
+        cout << "min time without: " << min_time << " Calc time on given server: " << get_calc_time(server, task) << endl;
         return get_calc_time(server, task) < min_time + task->time;
 
     }
@@ -332,7 +335,7 @@ bool should_send_to_server(Server& server, Task *task) {
         min_time_with = max(get_calc_time(server, task), s1_remaining_time + get_calc_time(s1, &other_task));
     else
         min_time_with = max(get_calc_time(server, task), s2_remaining_time + get_calc_time(s2, &other_task));
-
+    cout << "min time with: " << min_time_with << " min time without: " << min_time_without << endl;
     return min_time_with < min_time_without;
 }
 
