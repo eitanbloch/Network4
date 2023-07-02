@@ -306,14 +306,14 @@ bool should_send_to_server(Server& server, Task *task) {
             min_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
         }
         cout << "min time without: " << min_time << " Calc time on given server: " << get_calc_time(server, task) << endl;
-        return get_calc_time(server, task) <= min_time + task->time;
+        return get_calc_time(server, task) <= min_time + task->time + 1;
 
     }
 
     //task list = 2
     // calc time without
-    auto& s1 = server_list[0]; // M
-    auto& s2 = server_list[1]; // V
+    auto& s1 = server_list[0];
+    auto& s2 = server_list[1];
     if (s1.id == server.id) s1 = server_list[2];
     if (s2.id == server.id) s2 = server_list[2];
 
@@ -322,8 +322,8 @@ bool should_send_to_server(Server& server, Task *task) {
     cout << "s1 calc time: " << (get_time() - s1.task.start_time) << " s2 calc time: " << (get_time() - s2.task.start_time) << endl;
     cout << "s1 start time" << s1.task.start_time << " s2 start time: " << s2.task.start_time << endl;
     cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
-    Task *t1 = &(task_list[0]); // M2
-    Task *t2 = &(task_list[1]); // M1
+    Task *t1 = &(task_list[0]);
+    Task *t2 = &(task_list[1]);
 
     // o1 send 1,2 to server 1
     long o1 = max(s1_remaining_time + get_calc_time(s1, t1) + get_calc_time(s1, t2), s2_remaining_time);
@@ -347,7 +347,7 @@ bool should_send_to_server(Server& server, Task *task) {
     min_time_with = min(min(o1, o2), o3);
 
     cout << "min time with: " << min_time_with << " min time without: " << min_time_without << endl;
-    return min_time_with <= min_time_without;
+    return min_time_with <= min_time_without + 1;
 }
 
 
