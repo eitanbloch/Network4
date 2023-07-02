@@ -292,7 +292,7 @@ bool should_send_to_server(Server& server, Task *task) {
                     system_clock::now() - s1.task.start_time).count() : 0);
             int s2_remaining_time = int(s2.is_busy ? s2.task.time - std::chrono::duration_cast<std::chrono::seconds>(
                     system_clock::now() - s2.task.start_time).count() : 0);
-
+            cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
             min_time = min(s1_remaining_time, s2_remaining_time);
         }
         else{
@@ -314,7 +314,7 @@ bool should_send_to_server(Server& server, Task *task) {
 
     int s1_remaining_time = int(s1.is_busy ? s1.task.time - std::chrono::duration_cast<std::chrono::seconds>(system_clock::now() - s1.task.start_time).count() : 0);
     int s2_remaining_time = int(s2.is_busy ? s2.task.time - std::chrono::duration_cast<std::chrono::seconds>(system_clock::now() - s2.task.start_time).count() : 0);
-
+    cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
     Task *t1 = &(task_list[0]);
     Task *t2 = &(task_list[1]);
 
