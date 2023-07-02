@@ -168,7 +168,7 @@ void get_tasks_from_clients() {
 
         if (new_connection) {
             // accept
-            int client_socket = accept(sock, (struct sockaddr *) &client, (socklen_t * ) & client_size);
+            int client_socket = accept(sock, (struct sockaddr *) &client, (socklen_t *) &client_size);
             if (client_socket < 0) {
                 cout << "Error accepting client connection" << endl;
                 exit(-1);
@@ -179,7 +179,8 @@ void get_tasks_from_clients() {
                 exit(-1);
             }
 
-            cout << "Received request from client " << buffer[0] << buffer[1] << " on socket: " << client_socket << endl;
+            cout << "Received request from client " << buffer[0] << buffer[1] << " on socket: " << client_socket
+                 << endl;
 
             //handle request
             task_list.emplace_back(get_client_id(client), client_socket, buffer);
@@ -211,7 +212,8 @@ void poll_servers() {
 
             //send the message to the client
             if (send(client_socket, buffer, 2, 0) < 0) {
-                cout << "Error sending response to client, buffer:" << buffer << " client socket: " << client_socket << endl;
+                cout << "Error sending response to client, buffer:" << buffer << " client socket: " << client_socket
+                     << endl;
                 exit(-1);
             }
             // close connection with client
@@ -254,21 +256,8 @@ void send_task_to_server(Server& server, Task task) {
     }
 
 
-
 }
 
-int get_score(Server& server, Task *task) {
-    bool are_same = are_matching(server.is_music, task->type);
-    int score = task->time;
-    if (!are_same) {
-        score *= (task->type == VIDEO ? 2 : 1); // if video server, then type is music
-        score += 100;
-    }
-
-    double dist = client_completed[task->client_id] - (sum_completed / 5.0);
-    score += (int) pow(3.0, dist);
-    return score;
-}
 
 int get_calc_time(Server *server, Task *task) {
     int calc_time = task->time;
@@ -282,7 +271,6 @@ int get_calc_time(Server *server, Task *task) {
         calc_time *= 2;
     return calc_time;
 }
-
 
 
 bool should_send_to_server(Server& s, Task *task) {
@@ -299,14 +287,16 @@ bool should_send_to_server(Server& s, Task *task) {
 
             long s1_remaining_time = s1->is_busy ? s1->task.time - (get_time() - s1->task.start_time) : 0;
             long s2_remaining_time = s2->is_busy ? s2->task.time - (get_time() - s2->task.start_time) : 0;
-            cout << "s1 calc time: " << (get_time() - s1->task.start_time) << " s2 calc time: " << (get_time() - s2->task.start_time) << endl;
+            cout << "s1 calc time: " << (get_time() - s1->task.start_time) << " s2 calc time: "
+                 << (get_time() - s2->task.start_time) << endl;
             min_time = min(s1_remaining_time, s2_remaining_time);
         }
-        else{
-            auto &s1 = server_list[2];
+        else {
+            auto& s1 = server_list[2];
             min_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
         }
-        cout << "min time without: " << min_time << " Calc time on given server: " << get_calc_time(server, task) << endl;
+        cout << "min time without: " << min_time << " Calc time on given server: " << get_calc_time(server, task)
+             << endl;
         return get_calc_time(server, task) <= min_time + task->time + 1;
 
     }
@@ -343,7 +333,8 @@ bool should_send_to_server(Server& s, Task *task) {
     // o2 - send other to server 2
     o2 = max((long) get_calc_time(server, task), s2_remaining_time + get_calc_time(s2, &other_task));
     // o3 - send both to server
-    o3 = max((long) get_calc_time(server, task) + get_calc_time(server, &other_task), max(s1_remaining_time, s2_remaining_time));
+    o3 = max((long) get_calc_time(server, task) + get_calc_time(server, &other_task),
+             max(s1_remaining_time, s2_remaining_time));
     min_time_with = min(min(o1, o2), o3);
 
     cout << "min time with: " << min_time_with << " min time without: " << min_time_without << endl;
@@ -353,39 +344,32 @@ bool should_send_to_server(Server& s, Task *task) {
 
 void handle_server(int server_id) {
     auto& server = server_list[server_id];
-    if (server.id != server_id){
-        cout << "wanted id: " << server_id << " but real id is: " << server.id << endl;
-        for (auto& s: server_list){
-            cout << "server id: " << s.id << endl;
-        }
-    }
+
     if (server.is_busy || task_list.empty())
         return;
-    /*
-    Task *best_task = nullptr;
-    int min_score = 1000000;
-    for (auto &task: task_list){
-        int score = get_score(server, &task);
-        if (best_task == nullptr || score < min_score) {
-            best_task = &task;
-            min_score = score;
-        }
-    }
-    send_task_to_server(server, *best_task);
-    */
+
 
     // start with sjf
     Task *best_task = nullptr;
-    for (auto& task: task_list) {
-        if (are_matching(server.is_music, task.type)) {
-            if (best_task == nullptr || task.time < best_task->time) {
-                best_task = &task;
+    if (server.id == 0){
+        for (auto& task: task_list) {
+            if (are_matching(server.is_music, task.type)) {
+                if (best_task == nullptr || task.time > best_task->time) {
+                    best_task = &task;
+                }
             }
         }
     }
-    if (server.id == 1){
-        cout << "server 1: best task: " << (best_task != nullptr) << endl;
+    else {
+        for (auto& task: task_list) {
+            if (are_matching(server.is_music, task.type)) {
+                if (best_task == nullptr || task.time < best_task->time) {
+                    best_task = &task;
+                }
+            }
+        }
     }
+    
     if (best_task) {
         send_task_to_server(server, *best_task);
         return;
