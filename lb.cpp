@@ -353,11 +353,8 @@ bool should_send_to_server(Server& server, Task *task) {
 
 void handle_server(int server_id) {
     auto& server = server_list[server_id];
-    if (server.id == 1){
-        cout << "server 1: is_busy: " << server.is_busy << endl;
-    }
-    if (server.id != 1 && server_id == 1){
-        cout << "wanted id 1 but real id is: " << server.id << endl;
+    if (server.id != server_id){
+        cout << "wanted id: " << server_id << " but real id is: " << server.id << endl;
     }
     if (server.is_busy || task_list.empty())
         return;
