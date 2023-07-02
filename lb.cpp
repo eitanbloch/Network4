@@ -177,7 +177,7 @@ void get_tasks_from_clients() {
                 exit(-1);
             }
 
-            cout << "Received request from client " << buffer[0] << buffer[1] << endl;
+            cout << "Received request from client " << buffer[0] << buffer[1] << " on socket: " << client_socket << endl;
 
             //handle request
             task_list.emplace_back(get_client_id(client), client_socket, buffer);
