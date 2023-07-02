@@ -347,9 +347,7 @@ void handle_server(int server_id) {
 
     if (server.is_busy || task_list.empty())
         return;
-
-
-    // start with sjf
+    
     Task *best_task = nullptr;
     if (server.id == 0){
         for (auto& task: task_list) {
