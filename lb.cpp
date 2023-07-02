@@ -286,6 +286,7 @@ int get_calc_time(Server& server, Task *task) {
 
 
 bool should_send_to_server(Server& server, Task *task) {
+    return true;
     cout << "should send to server, Got server id: " << server.id << " Task : " << task->data << endl;
     cout << "Task list size: " << task_list.size() << endl;
     if (task_list.size() >= 3)
