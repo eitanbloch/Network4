@@ -29,7 +29,7 @@ using std::min;
 using std::sort;
 
 typedef struct sockaddr_in Addr;
-typedef std::chrono::time_point<system_clock> u_time;
+typedef std::time_t u_time;
 const char *SERVER_IP[] = {"192.168.0.101", "192.168.0.102", "192.168.0.103"};
 int sock;
 Addr addr;
@@ -98,6 +98,9 @@ struct Server {
 vector<Task> task_list;
 vector<Server> server_list;
 
+u_time get_time() {
+    return std::time(nullptr);
+}
 
 int get_client_id(Addr client_address) {
     string client_ip = inet_ntoa(client_address.sin_addr);
@@ -246,7 +249,7 @@ void send_task_to_server(Server& server, Task task) {
             break;
         }
     }
-    task.start_time = system_clock::now();
+    task.start_time = get_time();
 }
 
 int get_score(Server& server, Task *task) {
@@ -282,23 +285,21 @@ bool should_send_to_server(Server& server, Task *task) {
     cout << "Task list size: " << task_list.size() << endl;
     if (task_list.size() >= 3)
         return true;
-    int min_time;
+    long min_time;
     if (task_list.size() == 1) {
         if (server.is_music) {
             auto& s1 = server_list[0];
             auto& s2 = server_list[1];
 
-            int s1_remaining_time = int(s1.is_busy ? s1.task.time - std::chrono::duration_cast<std::chrono::seconds>(
-                    system_clock::now() - s1.task.start_time).count() : 0);
-            int s2_remaining_time = int(s2.is_busy ? s2.task.time - std::chrono::duration_cast<std::chrono::seconds>(
-                    system_clock::now() - s2.task.start_time).count() : 0);
+            long s1_remaining_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
+            long s2_remaining_time = s2.is_busy ? s2.task.time - (get_time() - s2.task.start_time) : 0;
+
             cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
             min_time = min(s1_remaining_time, s2_remaining_time);
         }
         else{
             auto &s1 = server_list[2];
-            min_time = int(s1.is_busy ? s1.task.time - std::chrono::duration_cast<std::chrono::seconds>(
-                    system_clock::now() - s1.task.start_time).count() : 0);
+            min_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
         }
         cout << "min time without: " << min_time << " Calc time on given server: " << get_calc_time(server, task) << endl;
         return get_calc_time(server, task) < min_time + task->time;
@@ -312,29 +313,29 @@ bool should_send_to_server(Server& server, Task *task) {
     if (s1.id == server.id) s1 = server_list[2];
     if (s2.id == server.id) s2 = server_list[2];
 
-    int s1_remaining_time = int(s1.is_busy ? s1.task.time - std::chrono::duration_cast<std::chrono::seconds>(system_clock::now() - s1.task.start_time).count() : 0);
-    int s2_remaining_time = int(s2.is_busy ? s2.task.time - std::chrono::duration_cast<std::chrono::seconds>(system_clock::now() - s2.task.start_time).count() : 0);
+    long s1_remaining_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
+    long s2_remaining_time = s2.is_busy ? s2.task.time - (get_time() - s2.task.start_time) : 0;
     cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
     Task *t1 = &(task_list[0]);
     Task *t2 = &(task_list[1]);
 
     // o1 send 1,2 to server 1
-    int o1 = max(s1_remaining_time + get_calc_time(s1, t1) + get_calc_time(s1, t2), s2_remaining_time);
+    long o1 = max(s1_remaining_time + get_calc_time(s1, t1) + get_calc_time(s1, t2), s2_remaining_time);
     // o2 send 1 to server 1
-    int o2 = max(s1_remaining_time + get_calc_time(s1, t1), s2_remaining_time + get_calc_time(s2, t2));
+    long o2 = max(s1_remaining_time + get_calc_time(s1, t1), s2_remaining_time + get_calc_time(s2, t2));
     // o3 send 2 to server 1
-    int o3 = max(s1_remaining_time + get_calc_time(s1, t2), s2_remaining_time + get_calc_time(s2, t1));
+    long o3 = max(s1_remaining_time + get_calc_time(s1, t2), s2_remaining_time + get_calc_time(s2, t1));
     // o4 send nothing to server 1
-    int o4 = max(s1_remaining_time, s2_remaining_time + get_calc_time(s2, t1) + get_calc_time(s2, t2));
-    int min_time_without = min(min(o1, o2), min(o3, o4));
+    long o4 = max(s1_remaining_time, s2_remaining_time + get_calc_time(s2, t1) + get_calc_time(s2, t2));
+    long min_time_without = min(min(o1, o2), min(o3, o4));
 
     // calc time with
-    int min_time_with;
+    long min_time_with;
     auto other_task = task_list[0].client_socket == task->client_socket ? task_list[1] : task_list[0];
     if (s1_remaining_time < s2_remaining_time)
-        min_time_with = max(get_calc_time(server, task), s1_remaining_time + get_calc_time(s1, &other_task));
+        min_time_with = max((long) get_calc_time(server, task), s1_remaining_time + get_calc_time(s1, &other_task));
     else
-        min_time_with = max(get_calc_time(server, task), s2_remaining_time + get_calc_time(s2, &other_task));
+        min_time_with = max((long) get_calc_time(server, task), s2_remaining_time + get_calc_time(s2, &other_task));
     cout << "min time with: " << min_time_with << " min time without: " << min_time_without << endl;
     return min_time_with < min_time_without;
 }
