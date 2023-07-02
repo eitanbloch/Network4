@@ -234,22 +234,23 @@ bool are_matching(bool is_music, TYPE type) {
 }
 
 
-void send_task_to_server(Server& server, Task task) {
-    if (send(server.socket, task.data, sizeof(task.data), MSG_DONTWAIT) < 0) {
+void send_task_to_server(Server& server, Task *task) {
+    if (send(server.socket, task->data, sizeof(task->data), MSG_DONTWAIT) < 0) {
         cout << "Error sending request to server" << endl;
         exit(-1);
     }
-    // update server
-    server.task = task;
-    server.is_busy = true;
     // update task list
     for (int i = 0; i < task_list.size(); i++) {
-        if (task_list[i].client_socket == task.client_socket) {
+        if (task_list[i].client_socket == task->client_socket) {
             task_list.erase(task_list.begin() + i);
             break;
         }
     }
-    task.start_time = get_time();
+    task->start_time = get_time();
+    // update server
+    server.task = *task;
+    server.is_busy = true;
+
 }
 
 int get_score(Server& server, Task *task) {
@@ -372,7 +373,7 @@ void handle_server(int server_id) {
     }
 
     if (best_task) {
-        send_task_to_server(server, *best_task);
+        send_task_to_server(server, best_task);
         return;
     }
 
@@ -395,7 +396,7 @@ void handle_server(int server_id) {
         }
     }
     if (should_send_to_server(server, best_task))
-        send_task_to_server(server, *best_task);
+        send_task_to_server(server, best_task);
 
 
 }
