@@ -270,9 +270,9 @@ int get_score(Server& server, Task *task) {
     return score;
 }
 
-int get_calc_time(Server& server, Task *task) {
+int get_calc_time(Server *server, Task *task) {
     int calc_time = task->time;
-    if (server.is_music) {
+    if (server->is_music) {
         if (task->type == PICTURE)
             calc_time *= 2;
         else if (task->type == VIDEO)
@@ -285,21 +285,21 @@ int get_calc_time(Server& server, Task *task) {
 
 
 
-bool should_send_to_server(Server& server, Task *task) {
-    return true;
-    cout << "should send to server, Got server id: " << server.id << " Task : " << task->data << endl;
+bool should_send_to_server(Server& s, Task *task) {
+    cout << "should send to server, Got server id: " << s.id << " Task : " << task->data << endl;
     cout << "Task list size: " << task_list.size() << endl;
+    auto *server = &(server_list[s.id]);
     if (task_list.size() >= 3)
         return true;
     long min_time;
     if (task_list.size() == 1) {
-        if (server.is_music) {
-            auto& s1 = server_list[0];
-            auto& s2 = server_list[1];
+        if (server->is_music) {
+            auto *s1 = &(server_list[0]);
+            auto *s2 = &(server_list[1]);
 
-            long s1_remaining_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0;
-            long s2_remaining_time = s2.is_busy ? s2.task.time - (get_time() - s2.task.start_time) : 0;
-            cout << "s1 calc time: " << (get_time() - s1.task.start_time) << " s2 calc time: " << (get_time() - s2.task.start_time) << endl;
+            long s1_remaining_time = s1->is_busy ? s1->task.time - (get_time() - s1->task.start_time) : 0;
+            long s2_remaining_time = s2->is_busy ? s2->task.time - (get_time() - s2->task.start_time) : 0;
+            cout << "s1 calc time: " << (get_time() - s1->task.start_time) << " s2 calc time: " << (get_time() - s2->task.start_time) << endl;
             min_time = min(s1_remaining_time, s2_remaining_time);
         }
         else{
@@ -313,13 +313,14 @@ bool should_send_to_server(Server& server, Task *task) {
 
     //task list = 2
     // calc time without
-    auto& s1 = server_list[0];
-    auto& s2 = server_list[1];
-    if (s1.id == server.id) s1 = server_list[2];
-    if (s2.id == server.id) s2 = server_list[2];
+    auto *s1 = &(server_list[0]);
+    auto *s2 = &(server_list[1]);
+    if (s1->id == server->id) s1 = &(server_list[2]);
+    if (s2->id == server->id) s2 = &(server_list[2]);
 
-    long s1_remaining_time = s1.is_busy ? s1.task.time - (get_time() - s1.task.start_time) : 0; // 1
-    long s2_remaining_time = s2.is_busy ? s2.task.time - (get_time() - s2.task.start_time) : 0; // 1
+
+    long s1_remaining_time = s1->is_busy ? s1->task.time - (get_time() - s1->task.start_time) : 0;
+    long s2_remaining_time = s2->is_busy ? s2->task.time - (get_time() - s2->task.start_time) : 0;
     cout << "s1 remaining time: " << s1_remaining_time << " s2 remaining time: " << s2_remaining_time << endl;
     Task *t1 = &(task_list[0]);
     Task *t2 = &(task_list[1]);
