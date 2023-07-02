@@ -209,7 +209,7 @@ void poll_servers() {
 
             //send the message to the client
             if (send(client_socket, buffer, 2, MSG_DONTWAIT) < 0) {
-                cout << "Error sending response to client" << endl;
+                cout << "Error sending response to client, buffer:" << buffer << " client socket: " << client_socket << endl;
                 exit(-1);
             }
             // close connection with client
